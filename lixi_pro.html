@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<title>Game Mở Ô Lì Xì PRO</title>
+<style>
+body{font-family:Arial;background:#b51717;color:white;text-align:center;}
+.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:15px;max-width:300px;margin:20px auto;}
+.cell{background:gold;color:#b30000;font-size:28px;height:90px;display:flex;align-items:center;justify-content:center;border-radius:12px;cursor:pointer;}
+.opened{background:white;}
+input,button{padding:10px;font-size:16px;margin:5px;}
+#history{max-width:300px;margin:auto;text-align:left;}
+</style>
+</head>
+<body>
+
+<h1>🎁 Game Mở Ô Lì Xì 🎁</h1>
+
+<div id="startBox">
+<p>Nhập tên để bắt đầu</p>
+<input id="name" placeholder="Tên của bạn">
+<button onclick="startGame()">Bắt đầu</button>
+</div>
+
+<h2 id="countdown"></h2>
+<div class="grid" id="grid" style="display:none"></div>
+<h2 id="result"></h2>
+
+<h3>Lịch sử trúng</h3>
+<ul id="history"></ul>
+
+<script>
+const SHEET_URL = "https://script.google.com/macros/s/AKfycbwjmgltfdp-nkLyUbeHmR1o80hTsarndTFto-nDWHq76IqcXa6KG1JvEsw-Do_14XEs/exec";
+
+if(localStorage.getItem("played")){
+  alert("Bạn đã chơi rồi!");
+  document.body.innerHTML="<h2>Bạn đã tham gia event này rồi 🧧</h2>";
+}
+
+let prizes=["50k","100k","200k","Chúc mừng năm mới","Phiếu 150k","Phiếu 250k","20k","70k","80k"];
+prizes.sort(()=>Math.random()-0.5);
+let played=false;
+let history=[];
+
+function startGame(){
+  const name=document.getElementById("name").value;
+  if(!name) return alert("Nhập tên!");
+  document.getElementById("startBox").style.display="none";
+  let t=5;
+  document.getElementById("countdown").innerText=t;
+  const timer=setInterval(()=>{
+    t--;
+    document.getElementById("countdown").innerText=t;
+    if(t==0){
+      clearInterval(timer);
+      document.getElementById("countdown").innerText="Chọn ô!";
+      document.getElementById("grid").style.display="grid";
+    }
+  },1000);
+}
+
+const grid=document.getElementById("grid");
+prizes.forEach(p=>{
+  const c=document.createElement("div");
+  c.className="cell";
+  c.innerText="🧧";
+  c.onclick=()=>{
+    if(played) return;
+    played=true;
+    localStorage.setItem("played","yes");
+    c.classList.add("opened");
+    c.innerText=p;
+    const name=document.getElementById("name").value;
+    document.getElementById("result").innerText="🎊 "+name+" nhận: "+p;
+
+    history.push(name+" : "+p);
+    document.getElementById("history").innerHTML =
+      history.map(h=>"<li>"+h+"</li>").join("");
+
+    fetch(SHEET_URL,{
+      method:"POST",
+      body:new URLSearchParams({
+        name:name,
+        result:p,
+        ua:navigator.userAgent
+      })
+    });
+  };
+  grid.appendChild(c);
+});
+</script>
+</body>
+</html>
